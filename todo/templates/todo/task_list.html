@@ -1,0 +1,81 @@
+{% extends 'todo/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Tasks</h2>
+    <a href="{% url 'task-create' %}" class="btn btn-primary">+ New Task</a>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Search tasks..." value="{{ query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="P" {% if status_filter == 'P' %}selected{% endif %}>Pending</option>
+                    <option value="IP" {% if status_filter == 'IP' %}selected{% endif %}>In Progress</option>
+                    <option value="C" {% if status_filter == 'C' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    <option value="H" {% if priority_filter == 'H' %}selected{% endif %}>High</option>
+                    <option value="M" {% if priority_filter == 'M' %}selected{% endif %}>Medium</option>
+                    <option value="L" {% if priority_filter == 'L' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Task List -->
+{% if tasks %}
+    <div class="list-group">
+        {% for task in tasks %}
+            <div class="list-group-item list-group-item-action {% if task.completed %}completed{% endif %} priority-{{ task.priority|lower }}">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">
+                            {% if task.completed %}
+                                <span class="badge bg-success me-2">✓</span>
+                            {% endif %}
+                            {{ task.title }}
+                        </h5>
+                        <p class="mb-1 text-muted">{{ task.description|truncatechars:100 }}</p>
+                        <small>
+                            <span class="badge bg-{% if task.priority == 'H' %}danger{% elif task.priority == 'M' %}warning{% else %}success{% endif %} me-2">
+                                {{ task.get_priority_display }}
+                            </span>
+                            <span class="badge bg-info me-2">{{ task.get_status_display }}</span>
+                            {% if task.due_date %}
+                                <span class="text-{% if task.due_date < today %}danger{% else %}secondary{% endif %}">
+                                    Due: {{ task.due_date }}
+                                </span>
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'task-toggle' task.pk %}" class="btn btn-sm btn-{% if task.completed %}warning{% else %}success{% endif %}">
+                            {% if task.completed %}Undo{% else %}Complete{% endif %}
+                        </a>
+                        <a href="{% url 'task-update' task.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'task-delete' task.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No tasks found. <a href="{% url 'task-create' %}">Create your first task!</a>
+    </div>
+{% endif %}
+{% endblock %}
